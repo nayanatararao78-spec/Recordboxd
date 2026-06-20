@@ -10,7 +10,7 @@ JavaScript frontend that talks to it.
 ## Stack
 
 - **Backend:** Python, FastAPI, SQLite
-- **Frontend:** HTML, CSS, JavaScript (no framework yet — kept simple
+- **Frontend:** HTML, CSS, JavaScript (no framework yet, kept simple
   while learning the fundamentals)
 
 ## Features
