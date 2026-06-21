@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import sqlite3
+import requests
 
 # This creates the actual app object. Everything below "attaches" to it.
 app = FastAPI(title="Recordboxd API")
@@ -54,7 +55,8 @@ def init_db():
             artist TEXT NOT NULL,
             rating REAL NOT NULL,
             review TEXT,
-            artwork_url TEXT
+            artwork_url TEXT,
+            date_added TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()
@@ -75,6 +77,30 @@ class AlbumIn(BaseModel):
 @app.on_event("startup")
 def on_startup():
     init_db()
+
+
+@app.get("/artwork")
+def get_artwork(title: str, artist: str):
+    """
+    Ask iTunes for cover art, on the server, where CORS doesn't apply.
+    The browser asks US for artwork, instead of asking iTunes directly.
+    """
+    try:
+        query = f"{artist} {title}"
+        res = requests.get(
+            "https://itunes.apple.com/search",
+            params={"term": query, "entity": "album", "limit": 1},
+            timeout=5,
+        )
+        data = res.json()
+        if data.get("results"):
+            art = data["results"][0]["artworkUrl100"].replace("100x100", "300x300")
+            return {"artwork_url": art}
+        return {"artwork_url": None}
+    except Exception:
+        # If iTunes is slow/unreachable, fail quietly rather than
+        # breaking the whole app over a missing picture.
+        return {"artwork_url": None}
 
 
 @app.get("/albums")
