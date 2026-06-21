@@ -239,8 +239,8 @@
   </div>
 
   <script>
-    // This is the address of our backend, now live on Railway.
-    const API_URL = "https://recordboxd-production.up.railway.app";
+    // This is the address of our backend, now live on Render.
+    const API_URL = "https://recordboxd.onrender.com";
 
     let currentRating = 0;
     let currentArtworkUrl = null;
