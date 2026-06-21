@@ -260,14 +260,11 @@
       }
 
       try {
-        const query = encodeURIComponent(`${artist} ${title}`);
-        const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=1`);
+        const res = await fetch(`${API_URL}/artwork?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`);
         const data = await res.json();
-        if (data.results && data.results.length > 0) {
-          // artworkUrl100 is a small thumbnail; swap to a bigger size
-          const bigArt = data.results[0].artworkUrl100.replace("100x100", "300x300");
-          currentArtworkUrl = bigArt;
-          img.src = bigArt;
+        if (data.artwork_url) {
+          currentArtworkUrl = data.artwork_url;
+          img.src = data.artwork_url;
           preview.style.display = "block";
         } else {
           preview.style.display = "none";
@@ -329,12 +326,18 @@
         const artHtml = album.artwork_url
           ? `<img src="${album.artwork_url}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; float:left; margin-right:10px;" />`
           : "";
+        let dateStr = "";
+        if (album.date_added) {
+          const d = new Date(album.date_added + "Z"); // SQLite stores UTC
+          dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        }
         div.innerHTML = `
           <span class="delete" data-id="${album.id}">remove</span>
           ${artHtml}
           <div class="title">${album.title}</div>
           <div class="artist">${album.artist} · ${starStr}</div>
           ${album.review ? `<div class="review">"${album.review}"</div>` : ""}
+          ${dateStr ? `<div style="font-size:11px; color: rgba(243,233,216,0.35); margin-top:6px; font-family:'Space Mono', monospace; clear:left;">Logged ${dateStr}</div>` : ""}
           <div style="clear:both;"></div>
         `;
         list.appendChild(div);
